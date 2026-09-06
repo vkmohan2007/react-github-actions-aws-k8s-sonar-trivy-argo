@@ -465,65 +465,65 @@ jobs:
 # 7. DEPLOY TO AWS EC2
 # ============================================================
 
-deploy:
-  name: Deploy to AWS EC2
-  runs-on: ubuntu-latest
-  timeout-minutes: 15
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-  needs:
-    - ghcr-push
-    - trivy-image
+    needs:
+      - ghcr-push
+      - trivy-image
 
-  steps:
+    steps:
 
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@v1.2.5
-      with:
-        host: ${{ secrets.AWS_EC2_HOST }}
-        username: ${{ secrets.AWS_EC2_USER }}
-        key: ${{ secrets.AWS_EC2_SSH_KEY }}
-        command_timeout: 10m
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          command_timeout: 10m
 
-        script: |
-          set -e
+          script: |
+            set -e
 
-          echo "Logging in to GHCR..."
+            echo "Logging in to GHCR..."
 
-          echo "${{ secrets.GHCR_TOKEN }}" | \
-            docker login ghcr.io \
-            -u "${{ github.actor }}" \
-            --password-stdin
+            echo "${{ secrets.GHCR_TOKEN }}" | \
+              docker login ghcr.io \
+              -u "${{ github.actor }}" \
+              --password-stdin
 
-          echo "Pulling image..."
+            echo "Pulling image..."
 
-          docker pull \
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            docker pull \
+              ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-          echo "Stopping existing container..."
+            echo "Stopping existing container..."
 
-          docker stop react-projects || true
-          docker rm react-projects || true
+            docker stop react-projects || true
+            docker rm react-projects || true
 
-          echo "Starting new container..."
+            echo "Starting new container..."
 
-          docker run -d \
-            --name react-projects \
-            --restart unless-stopped \
-            -p 9999:8080 \
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            docker run -d \
+              --name react-projects \
+              --restart unless-stopped \
+              -p 9999:8080 \
+              ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-          echo "Checking container..."
+            echo "Checking container..."
 
-          sleep 5
+            sleep 5
 
-          docker ps --filter "name=react-projects"
+            docker ps --filter "name=react-projects"
 
-          echo "Testing application..."
+            echo "Testing application..."
 
-          curl \
-            --fail \
-            --connect-timeout 10 \
-            --max-time 30 \
-            http://localhost:9999
+            curl \
+              --fail \
+              --connect-timeout 10 \
+              --max-time 30 \
+              http://localhost:9999
 
-          echo "Deployment successful."
+            echo "Deployment successful."
