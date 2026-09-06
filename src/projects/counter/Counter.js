@@ -14,7 +14,7 @@ const Counter = () => {
     }
   };
 
-  // increment
+
   const increment = () => {
     setCount(prevState => prevState + 1);
   };
