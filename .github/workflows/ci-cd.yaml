@@ -487,24 +487,38 @@ jobs:
           script: |
             set -e
 
-            echo "Logging in to GHCR..."
+            echo "========================================"
+            echo "Logging in to GHCR"
+            echo "========================================"
 
             echo "${{ secrets.GHCR_TOKEN }}" | \
               docker login ghcr.io \
               -u "${{ github.actor }}" \
               --password-stdin
 
-            echo "Pulling image..."
+            echo "========================================"
+            echo "Pulling image"
+            echo "========================================"
 
             docker pull \
               ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-            echo "Stopping existing container..."
+            echo "========================================"
+            echo "Removing existing container"
+            echo "========================================"
 
-            docker ps -q --filter "publish=9999" | xargs -r docker stop
-            docker ps -aq --filter "publish=9999" | xargs -r docker rm
+            docker rm -f react-github-aws 2>/dev/null || true
 
-            echo "Starting new container..."
+            echo "========================================"
+            echo "Removing any container using port 9999"
+            echo "========================================"
+
+            docker ps -aq --filter "publish=9999" | \
+              xargs -r docker rm -f
+
+            echo "========================================"
+            echo "Starting new container"
+            echo "========================================"
 
             docker run -d \
               --name react-github-aws \
@@ -512,18 +526,24 @@ jobs:
               -p 9999:8080 \
               ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-            echo "Checking container..."
+            echo "========================================"
+            echo "Container status"
+            echo "========================================"
+
+            docker ps --filter "name=^react-github-aws$"
+
+            echo "========================================"
+            echo "Testing application"
+            echo "========================================"
 
             sleep 5
-
-            docker ps --filter "name=react-github-aws"
-
-            echo "Testing application..."
 
             curl \
               --fail \
               --connect-timeout 10 \
               --max-time 30 \
-              http://localhost:9999
+              http://localhost:9999/
 
-            echo "Deployment successful."
+            echo "========================================"
+            echo "Deployment successful"
+            echo "========================================"
