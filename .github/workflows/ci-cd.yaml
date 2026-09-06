@@ -501,8 +501,8 @@ jobs:
 
             echo "Stopping existing container..."
 
-            docker stop react-github-aws || true
-            docker rm react-github-aws || true
+            docker ps -q --filter "publish=9999" | xargs -r docker stop
+            docker ps -aq --filter "publish=9999" | xargs -r docker rm
 
             echo "Starting new container..."
 
