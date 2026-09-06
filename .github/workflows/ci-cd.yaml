@@ -20,7 +20,7 @@ permissions:
 env:
   NODE_VERSION: "22"
   PNPM_VERSION: "10.7.0"
-  IMAGE_NAME: react-projects
+  IMAGE_NAME: react-github-aws
   REGISTRY: ghcr.io
 
 jobs:
@@ -501,13 +501,13 @@ jobs:
 
             echo "Stopping existing container..."
 
-            docker stop react-projects || true
-            docker rm react-projects || true
+            docker stop react-github-aws || true
+            docker rm react-github-aws || true
 
             echo "Starting new container..."
 
             docker run -d \
-              --name react-projects \
+              --name react-github-aws \
               --restart unless-stopped \
               -p 9999:8080 \
               ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
@@ -516,7 +516,7 @@ jobs:
 
             sleep 5
 
-            docker ps --filter "name=react-projects"
+            docker ps --filter "name=react-github-aws"
 
             echo "Testing application..."
 
